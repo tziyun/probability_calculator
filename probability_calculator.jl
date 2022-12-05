@@ -46,12 +46,6 @@ function create_fill_levels(intersections)
     return fill_levels
 end
 
-function clear_fill_levels(fill_levels, intersections)
-    for intersection in intersections
-        fill_levels[intersection].num_disjoints = 0
-    end
-end
-
 function write_fill_levels(fill_levels, intersections, disjoints)
     for disjoint in disjoints
         for intersection in intersections
@@ -72,6 +66,19 @@ function write_fill_levels(fill_levels, intersections, disjoints)
     end
 end
 
+function create_event_disjoints(events, intersections)
+    event_disjoints = Dict()
+    for event in events
+        push!(event_disjoints, event => [])
+        for intersection in intersections
+            if in(event, intersection)
+                push!(event_disjoints[event], intersection)
+            end
+        end
+    end
+    return event_disjoints
+end
+
 # Assumed input: a list of all possible events
 events = [:A, :B, :C, :D]
 
@@ -88,23 +95,15 @@ example_expr2 = [[:event :B], [:rator :n], [:event :D]]
 # Example: a known expression "A n C n D"
 example_expr3 = [[:event :A], [:rator :n], [:event :C], [:rator :n], [:event :D]]
 
-disjoints1 = eval_expr(example_expr1)
-disjoints2 = eval_expr(example_expr2)
-disjoints3 = eval_expr(example_expr3)
-
 # List representing all possible intersections of events
 intersections = collect(powerset(events))
 
 # For each event, list all intersections containing the event
-event_disjoints = Dict()
-for event in events
-    push!(event_disjoints, event => [])
-    for intersection in intersections
-        if in(event, intersection)
-            push!(event_disjoints[event], intersection)
-        end
-    end
-end
+event_disjoints = create_event_disjoints(events, intersections)
+
+disjoints1 = eval_expr(example_expr1)
+disjoints2 = eval_expr(example_expr2)
+disjoints3 = eval_expr(example_expr3)
 
 fill_levels1 = create_fill_levels(intersections)
 write_fill_levels(fill_levels1, intersections, disjoints1)
