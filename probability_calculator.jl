@@ -9,7 +9,7 @@ mutable struct intersection_stats
 end
 
 # Convert EXPR to a list of disjoint intersections
-function eval_expr(expr)
+function eval_expr(expr, event_disjoints)
     disjoints = []
     rator = :u
     for subexpr in expr
@@ -25,9 +25,9 @@ function eval_expr(expr)
         else
             # Recurse on subexpr
             if rator == :u
-                disjoints = union(disjoints, eval_expr(subexpr))
+                disjoints = union(disjoints, eval_expr(subexpr, event_disjoints))
             else
-                disjoints = intersect(disjoints, eval_expr(subexpr))
+                disjoints = intersect(disjoints, eval_expr(subexpr, event_disjoints))
             end
         end
     end
@@ -101,9 +101,9 @@ intersections = collect(powerset(events))
 # For each event, list all intersections containing the event
 event_disjoints = create_event_disjoints(events, intersections)
 
-disjoints1 = eval_expr(example_expr1)
-disjoints2 = eval_expr(example_expr2)
-disjoints3 = eval_expr(example_expr3)
+disjoints1 = eval_expr(example_expr1, event_disjoints)
+disjoints2 = eval_expr(example_expr2, event_disjoints)
+disjoints3 = eval_expr(example_expr3, event_disjoints)
 
 fill_levels1 = create_fill_levels(intersections)
 write_fill_levels(fill_levels1, intersections, disjoints1)
