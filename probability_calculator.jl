@@ -6,6 +6,7 @@ using Combinatorics, RowEchelon
 function eval_expr(expr, intersections, single_disjoints)
     disjoints = zeros(Bool, length(intersections))
     rator = :u
+    value = 0
     for subexpr in expr
 	if subexpr[1] == :rator
 	    rator = subexpr[2]
@@ -16,16 +17,19 @@ function eval_expr(expr, intersections, single_disjoints)
 	    else
 		disjoints = disjoints .& single_disjoints[event]
 	    end
+        elseif subexpr[1] == :equals
+            value = subexpr[2]
 	else
 	    # Recurse on subexpr
+            subexpr_result, value = eval_expr(subexpr, single_disjoints)
 	    if rator == :u
-		disjoints = disjoints .| eval_expr(subexpr, intersections, single_disjoints)
+		disjoints = disjoints .| subexpr_result
 	    else
-		disjoints = disjoints .& eval_expr(subexpr, intersections, single_disjoints)
+		disjoints = disjoints .& subexpr_result
 	    end
 	end
     end
-    return disjoints
+    return disjoints, value
 end
 
 # For each possible event in INTERSECTIONS, record the number of
@@ -89,11 +93,11 @@ single_events = [:A, :B, :C, :D]
 # Example: the unknown expression "(A n C) u B n D"
 example_expr1 = [[[:event :A], [:rator :n], [:event :C]], [:rator :u], [:event :B], [:rator :n], [:event :D]]
 # Example: a known expression "B n D"
-example_expr2 = [[:event :B], [:rator :n], [:event :D]]
+example_expr2 = [[:event :B], [:rator :n], [:event :D], [:equals 0.6]]
 # Example: a known expression "A n C n D"
-example_expr3 = [[:event :A], [:rator :n], [:event :C], [:rator :n], [:event :D]]
+example_expr3 = [[:event :A], [:rator :n], [:event :C], [:rator :n], [:event :D], [:equals 0.2]]
 # Example: a known expression "A n B n C n D"
-example_expr4 = [[:event :A], [:rator :n], [:event :B], [:rator :n], [:event :C], [:rator :n], [:event :D]]
+example_expr4 = [[:event :A], [:rator :n], [:event :B], [:rator :n], [:event :C], [:rator :n], [:event :D], [:equals 0.1]]
 
 # List representing all possible intersections of events
 intersections = collect(powerset(single_events))
@@ -101,10 +105,10 @@ intersections = collect(powerset(single_events))
 # For each single event, record all of its disjoint subsets
 single_disjoints = create_single_disjoints(single_events, intersections)
 
-disjoints1 = eval_expr(example_expr1, intersections, single_disjoints)
-disjoints2 = eval_expr(example_expr2, intersections, single_disjoints)
-disjoints3 = eval_expr(example_expr3, intersections, single_disjoints)
-disjoints4 = eval_expr(example_expr4, intersections, single_disjoints)
+disjoints1, _ = eval_expr(example_expr1, single_disjoints)
+disjoints2, value2 = eval_expr(example_expr2, single_disjoints)
+disjoints3, value3 = eval_expr(example_expr3, single_disjoints)
+disjoints4, value4 = eval_expr(example_expr4, single_disjoints)
 
 max = max_fill_levels(intersections)
 fill_levels1 = current_fill_levels(max, intersections, disjoints1)
