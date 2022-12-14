@@ -2,6 +2,123 @@
 # Imports
 using Combinatorics, RowEchelon
 
+# Convert the input string into a list of tokens
+function lex_input(input_string)
+    tokens = []
+    token_types = [:whitespace, :oparen, :cparen, :rator, :rator, :equals, :event]
+    regexps = [
+	r"^\s+",      # whitespace
+	r"^\(",       # opening parenthesis
+	r"^\)",       # closing parenthesis
+	r"^and",      # the word "and"
+	r"^or",       # the word "or"
+                      # a number
+	r"^=\s*([0-9]*\.?[0-9]+)",
+	r"^[^\s)=]+"  # a word
+    ]
+    while input_string != ""
+	match_found = false
+	for i in 1:length(token_types)
+	    result_status = match(regexps[i], input_string)
+	    if result_status != nothing
+		match_found = true
+		result = result_status.match
+		if token_types[i] == :oparen || token_types[i] == :cparen
+		    push!(tokens, [token_types[i] :none])
+		elseif token_types[i] == :rator
+		    if result == "and"
+			push!(tokens, [:rator :n])
+		    else
+			push!(tokens, [:rator :u])
+		    end
+		elseif token_types[i] == :equals
+		    result = result_status.captures[1]
+		    push!(tokens, [:equals parse(Float64, result)])
+		elseif token_types[i] == :event
+		    push!(tokens, [:event Symbol(result)])
+		end
+		input_string = SubString(input_string, length(result) + 1, length(input_string))
+		break
+	    end
+	end
+	if match_found == false
+	    break
+	end
+    end
+    return tokens
+end
+
+# Convert a list of tokens to an AST
+
+# Grammar for AST:
+#   input_expr = expr_list
+#   expr_list = expr expr_tail
+#   expr_tail = empty | RATOR expr_list
+#   expr = EVENT | OPAREN expr_list CPAREN
+
+function is_next(type, tokens)
+    if tokens == []
+	return false
+    else
+	return tokens[1][1] == type
+    end
+end
+
+function consume(type, tokens)
+    if tokens == []
+	# Throw an error
+    elseif tokens[1][1] != type
+	# Throw an error
+    else
+	value = tokens[1][2]
+	popfirst!(tokens)
+	return value
+    end
+end
+
+function parse_input(tokens)
+    result = parse_expr_list(tokens)
+    return result
+end
+
+function parse_expr_list(tokens)
+    expr_result = parse_expr(tokens)
+    expr_list_result = parse_expr_tail(expr_result, tokens)
+    return expr_list_result
+end
+
+function parse_expr_tail(expr_result, tokens)
+    if is_next(:rator, tokens)
+	result = []
+	rator_result = [:rator, consume(:rator, tokens)]
+	expr_list_result = parse_expr_list(tokens)
+	push!(result, expr_result, rator_result)
+	if expr_list_result[1] == :event
+	    push!(result, expr_list_result)
+	else
+	    append!(result, expr_list_result)
+	end
+	return result
+    elseif is_next(:equals, tokens)
+	result = []
+	equals_result = [:equals, consume(:equals, tokens)]
+	push!(result, expr_result, equals_result)
+    else
+	return expr_result
+    end
+end
+
+function parse_expr(tokens)
+    if is_next(:event, tokens)
+	return [:event, consume(:event, tokens)]
+    elseif is_next(:oparen, tokens)
+	consume(:oparen, tokens)
+	result = parse_expr_list(tokens)
+	consume(:cparen, tokens)
+	return result
+    end
+end
+
 # Convert EXPR to a list of disjoint intersections
 function eval_expr(expr, intersections, single_disjoints)
     disjoints = zeros(Bool, length(intersections))
@@ -21,7 +138,7 @@ function eval_expr(expr, intersections, single_disjoints)
             value = subexpr[2]
 	else
 	    # Recurse on subexpr
-            subexpr_result, value = eval_expr(subexpr, single_disjoints)
+            subexpr_result, value = eval_expr(subexpr, intersections, single_disjoints)
 	    if rator == :u
 		disjoints = disjoints .| subexpr_result
 	    else
@@ -137,22 +254,17 @@ end
 # Assumed input: a list of single events
 single_events = [:A, :B, :C, :D]
 
-# Assumed input: an AST from parsing an expression of events
-# With the following grammar:
-#   input_expr = rand_expr rator_expr rand_expr
-#    rand_expr = event | OPAREN rand_expr rator_expr rand_expr CPAREN
-#   rator_expr = UNION | INTERSECT
-
-input_exprs = [
-    # The unknown expression "(A n C) u B n D"
-    [[[:event :A], [:rator :n], [:event :C]], [:rator :u], [:event :B], [:rator :n], [:event :D]],
-    # The known expression "B n D"
-    [[:event :B], [:rator :n], [:event :D], [:equals 0.6]],
-    # The known expression "A n C n D"
-    [[:event :A], [:rator :n], [:event :C], [:rator :n], [:event :D], [:equals 0.2]],
-    # The known expression "A n B n C n D"
-    [[:event :A], [:rator :n], [:event :B], [:rator :n], [:event :C], [:rator :n], [:event :D], [:equals 0.1]]
+input_strings = [
+    "(A and C) or B and D",
+    "B and D = 0.6",
+    "A and C and D = 0.2",
+    "A and B and C and D = 0.1"
 ]
+
+input_exprs = []
+for input_string in input_strings
+    push!(input_exprs, parse_input(lex_input(input_string)))
+end
 
 # List representing all possible intersections of events
 intersections = collect(powerset(single_events))
@@ -164,7 +276,7 @@ single_disjoints = create_single_disjoints(single_events, intersections)
 input_dsets = []
 input_probabilities = []
 for input_expr in input_exprs
-    dset, probability = eval_expr(input_expr, single_disjoints)
+    dset, probability = eval_expr(input_expr, intersections, single_disjoints)
     push!(input_dsets, dset)
     push!(input_probabilities, probability)
 end
