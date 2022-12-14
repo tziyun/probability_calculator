@@ -90,14 +90,16 @@ single_events = [:A, :B, :C, :D]
 #    rand_expr = event | OPAREN rand_expr rator_expr rand_expr CPAREN
 #   rator_expr = UNION | INTERSECT
 
-# Example: the unknown expression "(A n C) u B n D"
-example_expr1 = [[[:event :A], [:rator :n], [:event :C]], [:rator :u], [:event :B], [:rator :n], [:event :D]]
-# Example: a known expression "B n D"
-example_expr2 = [[:event :B], [:rator :n], [:event :D], [:equals 0.6]]
-# Example: a known expression "A n C n D"
-example_expr3 = [[:event :A], [:rator :n], [:event :C], [:rator :n], [:event :D], [:equals 0.2]]
-# Example: a known expression "A n B n C n D"
-example_expr4 = [[:event :A], [:rator :n], [:event :B], [:rator :n], [:event :C], [:rator :n], [:event :D], [:equals 0.1]]
+input_exprs = [
+    # The unknown expression "(A n C) u B n D"
+    [[[:event :A], [:rator :n], [:event :C]], [:rator :u], [:event :B], [:rator :n], [:event :D]],
+    # The known expression "B n D"
+    [[:event :B], [:rator :n], [:event :D], [:equals 0.6]],
+    # The known expression "A n C n D"
+    [[:event :A], [:rator :n], [:event :C], [:rator :n], [:event :D], [:equals 0.2]],
+    # The known expression "A n B n C n D"
+    [[:event :A], [:rator :n], [:event :B], [:rator :n], [:event :C], [:rator :n], [:event :D], [:equals 0.1]]
+]
 
 # List representing all possible intersections of events
 intersections = collect(powerset(single_events))
@@ -105,13 +107,19 @@ intersections = collect(powerset(single_events))
 # For each single event, record all of its disjoint subsets
 single_disjoints = create_single_disjoints(single_events, intersections)
 
-disjoints1, _ = eval_expr(example_expr1, single_disjoints)
-disjoints2, value2 = eval_expr(example_expr2, single_disjoints)
-disjoints3, value3 = eval_expr(example_expr3, single_disjoints)
-disjoints4, value4 = eval_expr(example_expr4, single_disjoints)
+# Disjoint set corresponding to each input expression
+input_dsets = []
+input_probabilities = []
+for input_expr in input_exprs
+    dset, probability = eval_expr(input_expr, single_disjoints)
+    push!(input_dsets, dset)
+    push!(input_probabilities, probability)
+end
 
-max = max_fill_levels(intersections)
-fill_levels1 = current_fill_levels(max, intersections, disjoints1)
-fill_levels2 = current_fill_levels(max, intersections, disjoints2)
-fill_levels3 = current_fill_levels(max, intersections, disjoints3)
-fill_levels4 = current_fill_levels(max, intersections, disjoints4)
+# Fill levels corresponding to each input expression
+max_flevels = max_fill_levels(single_events, intersections)
+input_flevels = []
+for input_dset in input_dsets
+    flevel = current_fill_levels(max_flevels, intersections, input_dset)
+    push!(input_flevels, flevel)
+end
