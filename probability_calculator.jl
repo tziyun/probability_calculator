@@ -81,6 +81,59 @@ function create_single_disjoints(single_events, intersections)
     return single_disjoints
 end
 
+# Find the probability of the unknown event
+function find_probability(intersections, input_flevels, input_probabilities)
+    # Convert the known fill levels to a system of linear equations
+    unknown = Array{Int64, 1}(undef, length(intersections) + 1)
+    known_system = Array{Int64, 2}(undef, length(input_flevels), length(intersections) + 1)
+    num_cols = length(intersections)
+
+    # Always true that the sum of the probabilities of all disjoints is 100%
+    known_system[1, 1:(end - 1)] .= 1
+    known_system[1, end] = 100
+
+    for i in 1:length(input_flevels)
+	input_fstatus = Array{Int64, 1}(undef, length(intersections))
+	for j in 1:length(intersections)
+	    if input_flevels[i][j] == max_flevels[j]
+		input_fstatus[j] = 1
+	    else
+		input_fstatus[j] = 0
+	    end
+	end
+	if i == 1
+	    unknown[1:(end - 1)] = input_fstatus
+	    unknown[end] = input_probabilities[i] * 100
+	else
+	    known_system[i, 1:(end - 1)] = input_fstatus
+	    known_system[i, end] = input_probabilities[i] * 100
+	end
+    end
+
+    # Solve the system of known linear equations
+    known_rref, pivots = rref_with_pivots(known_system)
+    known_rref = Int.(known_rref)
+
+    # Solve the system wrt the unknown linear equation
+    p = 1
+    for i in 1:length(intersections)
+	if unknown[i] != 0
+	    while p <= length(pivots) && i != pivots[p]
+		p += 1
+	    end
+	    if p > length(pivots)
+		# Throw an error
+		println("Inconsistent system of equations")
+		break
+	    else
+		unknown = @. unknown - unknown[i] * known_rref[p, :]
+	    end
+	end
+    end
+
+    return - unknown[end]
+end
+
 # Assumed input: a list of single events
 single_events = [:A, :B, :C, :D]
 
@@ -123,3 +176,5 @@ for input_dset in input_dsets
     flevel = current_fill_levels(max_flevels, intersections, input_dset)
     push!(input_flevels, flevel)
 end
+
+find_probability(intersections, input_flevels, input_probabilities)
