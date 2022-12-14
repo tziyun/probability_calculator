@@ -1,9 +1,9 @@
 
 # Imports
-using Combinatorics
+using Combinatorics, RowEchelon
 
 # Convert EXPR to a list of disjoint intersections
-function eval_expr(expr, single_disjoints)
+function eval_expr(expr, intersections, single_disjoints)
     disjoints = zeros(Bool, length(intersections))
     rator = :u
     for subexpr in expr
@@ -19,9 +19,9 @@ function eval_expr(expr, single_disjoints)
 	else
 	    # Recurse on subexpr
 	    if rator == :u
-		disjoints = disjoints .| eval_expr(subexpr, single_disjoints)
+		disjoints = disjoints .| eval_expr(subexpr, intersections, single_disjoints)
 	    else
-		disjoints = disjoints .& eval_expr(subexpr, single_disjoints)
+		disjoints = disjoints .& eval_expr(subexpr, intersections, single_disjoints)
 	    end
 	end
     end
@@ -30,11 +30,11 @@ end
 
 # For each possible event in INTERSECTIONS, record the number of
 # all possible disjoint subset events
-function max_fill_levels(intersections)
+function max_fill_levels(single_events, intersections)
     max_fill_levels = []
     for intersection in intersections
 	push!(max_fill_levels,
-	      2^(length(events) - length(intersection)))
+	      2^(length(single_events) - length(intersection)))
     end
     return max_fill_levels
 end
@@ -62,9 +62,9 @@ end
 # For each single event in EVENTS, record all events which are
 # its disjoint constituents. That is, the sum of all disjoint
 # constituents equals the event.
-function create_single_disjoints(events, intersections)
+function create_single_disjoints(single_events, intersections)
     single_disjoints = Dict()
-    for single_event in events
+    for single_event in single_events
 	push!(single_disjoints, single_event => [])
 	for intersection in intersections
 	    if in(single_event, intersection)
@@ -77,8 +77,8 @@ function create_single_disjoints(events, intersections)
     return single_disjoints
 end
 
-# Assumed input: a list of all possible events
-events = [:A, :B, :C, :D]
+# Assumed input: a list of single events
+single_events = [:A, :B, :C, :D]
 
 # Assumed input: an AST from parsing an expression of events
 # With the following grammar:
@@ -96,15 +96,15 @@ example_expr3 = [[:event :A], [:rator :n], [:event :C], [:rator :n], [:event :D]
 example_expr4 = [[:event :A], [:rator :n], [:event :B], [:rator :n], [:event :C], [:rator :n], [:event :D]]
 
 # List representing all possible intersections of events
-intersections = collect(powerset(events))
+intersections = collect(powerset(single_events))
 
 # For each single event, record all of its disjoint subsets
-single_disjoints = create_single_disjoints(events, intersections)
+single_disjoints = create_single_disjoints(single_events, intersections)
 
-disjoints1 = eval_expr(example_expr1, single_disjoints)
-disjoints2 = eval_expr(example_expr2, single_disjoints)
-disjoints3 = eval_expr(example_expr3, single_disjoints)
-disjoints4 = eval_expr(example_expr4, single_disjoints)
+disjoints1 = eval_expr(example_expr1, intersections, single_disjoints)
+disjoints2 = eval_expr(example_expr2, intersections, single_disjoints)
+disjoints3 = eval_expr(example_expr3, intersections, single_disjoints)
+disjoints4 = eval_expr(example_expr4, intersections, single_disjoints)
 
 max = max_fill_levels(intersections)
 fill_levels1 = current_fill_levels(max, intersections, disjoints1)
