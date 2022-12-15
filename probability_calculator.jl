@@ -5,6 +5,7 @@ using Combinatorics, RowEchelon
 # Convert the input string into a list of tokens
 function lex_input(input_string)
     tokens = []
+    # Token type for each regexp
     token_types = [:whitespace, :oparen, :cparen, :rator, :rator, :equals, :event]
     regexps = [
 	r"^\s+",      # whitespace
@@ -18,6 +19,7 @@ function lex_input(input_string)
     ]
     while input_string != ""
 	match_found = false
+        # Compare input_string against each regexp until a match is found
 	for i in 1:length(token_types)
 	    result_status = match(regexps[i], input_string)
 	    if result_status != nothing
@@ -37,6 +39,7 @@ function lex_input(input_string)
 		elseif token_types[i] == :event
 		    push!(tokens, [:event Symbol(result)])
 		end
+                # Discard the matching part of input_string
 		input_string = SubString(input_string, length(result) + 1, length(input_string))
 		break
 	    end
@@ -119,9 +122,28 @@ function parse_expr(tokens)
     end
 end
 
-# Convert EXPR to a list of disjoint intersections
-function eval_expr(expr, intersections, single_disjoints)
-    disjoints = zeros(Bool, length(intersections))
+# For each simple event in EVENTS, compute the set of
+# all events which are its partitions
+function get_se_psets(simple_events, intersections)
+    se_psets = Dict()
+    for simple_event in simple_events
+	push!(se_psets, simple_event => [])
+	for intersection in intersections
+            # Whether intersection is a partition of simple_event
+	    if in(simple_event, intersection)
+		push!(se_psets[simple_event], true)
+	    else
+		push!(se_psets[simple_event], false)
+	    end
+	end
+    end
+    return se_psets
+end
+
+# Convert an input expression to the set of all events
+# which are its partitions
+function eval_expr(expr, intersections, se_psets)
+    ie_pset = zeros(Bool, length(intersections))
     rator = :u
     value = 0
     for subexpr in expr
@@ -130,89 +152,73 @@ function eval_expr(expr, intersections, single_disjoints)
 	elseif subexpr[1] == :event
 	    event = subexpr[2]
 	    if rator == :u
-		disjoints = disjoints .| single_disjoints[event]
+		ie_pset = ie_pset .| se_psets[event]
 	    else
-		disjoints = disjoints .& single_disjoints[event]
+		ie_pset = ie_pset .& se_psets[event]
 	    end
         elseif subexpr[1] == :equals
             value = subexpr[2]
 	else
 	    # Recurse on subexpr
-            subexpr_result, value = eval_expr(subexpr, intersections, single_disjoints)
+            subexpr_result, value = eval_expr(subexpr, intersections, se_psets)
 	    if rator == :u
-		disjoints = disjoints .| subexpr_result
+		ie_pset = ie_pset .| subexpr_result
 	    else
-		disjoints = disjoints .& subexpr_result
+		ie_pset = ie_pset .& subexpr_result
 	    end
 	end
     end
-    return disjoints, value
+    return ie_pset, value
 end
 
-# For each possible event in INTERSECTIONS, record the number of
-# all possible disjoint subset events
-function max_fill_levels(single_events, intersections)
-    max_fill_levels = []
+# For each possible event in INTERSECTIONS, compute the number of
+# all possible partitions
+function get_max_flevels(simple_events, intersections)
+    max_flevels = []
     for intersection in intersections
-	push!(max_fill_levels,
-	      2^(length(single_events) - length(intersection)))
+	push!(max_flevels,
+	      2^(length(simple_events) - length(intersection)))
     end
-    return max_fill_levels
+    return max_flevels
 end
 
-# For each possible event in INTERSECTIONS, record the number of
-# disjoint subset events that are "present", derived from one
-# expression of user input.
-function current_fill_levels(max_fill_levels, intersections, input_disjoints)
-    current_fill_levels = zeros(Int64, length(intersections))
-    for i in 1:length(input_disjoints)
-	if input_disjoints[i] == true
-	    temp_disjoint = intersections[i]
+# For each input expression, for each possible event in INTERSECTIONS,
+# compute that number of partitions that are present in the expression
+function get_ie_flevels(max_flevels, intersections, ie_pset)
+    ie_flevels = zeros(Int64, length(intersections))
+    for i in 1:length(ie_pset)
+	if ie_pset[i] == true
+	    ie_partition = intersections[i]
 	    for j in 1:length(intersections)
-		if issubset(intersections[j], temp_disjoint)
-		    if current_fill_levels[i] < max_fill_levels[i]
-			current_fill_levels[i] += 1
+                # Increment flevel for current partition
+                # Also increment flevel for each subset of current partition
+		if issubset(intersections[j], ie_partition)
+		    if ie_flevels[i] < max_flevels[i]
+			ie_flevels[i] += 1
 		    end
 		end
 	    end
 	end
     end
-    return current_fill_levels
-end
-
-# For each single event in EVENTS, record all events which are
-# its disjoint constituents. That is, the sum of all disjoint
-# constituents equals the event.
-function create_single_disjoints(single_events, intersections)
-    single_disjoints = Dict()
-    for single_event in single_events
-	push!(single_disjoints, single_event => [])
-	for intersection in intersections
-	    if in(single_event, intersection)
-		push!(single_disjoints[single_event], true)
-	    else
-		push!(single_disjoints[single_event], false)
-	    end
-	end
-    end
-    return single_disjoints
+    return ie_flevels
 end
 
 # Find the probability of the unknown event
-function find_probability(intersections, input_flevels, input_probabilities)
+function flevels_to_probability(intersections, ie_flevels, max_ie_flevels, input_probabilities)
     # Convert the known fill levels to a system of linear equations
     unknown = Array{Int64, 1}(undef, length(intersections) + 1)
-    known_system = Array{Int64, 2}(undef, length(input_flevels), length(intersections) + 1)
+    known_system = Array{Int64, 2}(undef, length(ie_flevels), length(intersections) + 1)
     num_cols = length(intersections)
 
-    # Always true that the sum of the probabilities of all disjoints is 100%
+    # Always true that the sum of the probabilities of all partitions is 100%
     known_system[1, 1:(end - 1)] .= 1
     known_system[1, end] = 100
 
-    for i in 1:length(input_flevels)
+    # Convert fill levels to fill status
+    for i in 1:length(ie_flevels)
 	input_fstatus = Array{Int64, 1}(undef, length(intersections))
 	for j in 1:length(intersections)
-	    if input_flevels[i][j] == max_flevels[j]
+	    if ie_flevels[i][j] == max_ie_flevels[j]
 		input_fstatus[j] = 1
 	    else
 		input_fstatus[j] = 0
@@ -248,11 +254,45 @@ function find_probability(intersections, input_flevels, input_probabilities)
 	end
     end
 
+    # Return the probability
     return - unknown[end]
 end
 
-# Assumed input: a list of single events
-single_events = [:A, :B, :C, :D]
+function find_probability(simple_events, input_strings)
+    input_exprs = []
+    for input_string in input_strings
+        push!(input_exprs, parse_input(lex_input(input_string)))
+    end
+
+    # List of all possible intersections of events
+    # Equivalently, of all partitions of the sample space
+    intersections = collect(powerset(simple_events))
+
+    # For each simple event, compute all partitions
+    se_psets = get_se_psets(simple_events, intersections)
+
+    # For each input event, compute all partitions
+    ie_psets = []
+    ie_probabilities = []
+    for input_expr in input_exprs
+        ie_pset, ie_probability = eval_expr(input_expr, intersections, se_psets)
+        push!(ie_psets, ie_pset)
+        push!(ie_probabilities, ie_probability)
+    end
+
+    # For each input event, compute all fill levels
+    max_ie_flevels = get_max_flevels(simple_events, intersections)
+    ie_flevels = []
+    for ie_pset in ie_psets
+        ie_flevel = get_ie_flevels(max_ie_flevels, intersections, ie_pset)
+        push!(ie_flevels, ie_flevel)
+    end
+
+    return flevels_to_probability(intersections, ie_flevels, max_ie_flevels, ie_probabilities)
+end
+
+# Assumed input: a list of simple events
+simple_events = [:A, :B, :C, :D]
 
 input_strings = [
     "(A and C) or B and D",
@@ -261,32 +301,4 @@ input_strings = [
     "A and B and C and D = 0.1"
 ]
 
-input_exprs = []
-for input_string in input_strings
-    push!(input_exprs, parse_input(lex_input(input_string)))
-end
-
-# List representing all possible intersections of events
-intersections = collect(powerset(single_events))
-
-# For each single event, record all of its disjoint subsets
-single_disjoints = create_single_disjoints(single_events, intersections)
-
-# Disjoint set corresponding to each input expression
-input_dsets = []
-input_probabilities = []
-for input_expr in input_exprs
-    dset, probability = eval_expr(input_expr, intersections, single_disjoints)
-    push!(input_dsets, dset)
-    push!(input_probabilities, probability)
-end
-
-# Fill levels corresponding to each input expression
-max_flevels = max_fill_levels(single_events, intersections)
-input_flevels = []
-for input_dset in input_dsets
-    flevel = current_fill_levels(max_flevels, intersections, input_dset)
-    push!(input_flevels, flevel)
-end
-
-find_probability(intersections, input_flevels, input_probabilities)
+find_probability(simple_events, input_strings)
