@@ -206,8 +206,8 @@ end
 # Find the probability of the unknown event
 function flevels_to_probability(intersections, ie_flevels, max_ie_flevels, input_probabilities)
     # Convert the known fill levels to a system of linear equations
-    unknown = Array{Int64, 1}(undef, length(intersections) + 1)
-    known_system = Array{Int64, 2}(undef, length(ie_flevels), length(intersections) + 1)
+    unknown = Array{Float64, 1}(undef, length(intersections) + 1)
+    known_system = Array{Float64, 2}(undef, length(ie_flevels), length(intersections) + 1)
     num_cols = length(intersections)
 
     # Always true that the sum of the probabilities of all partitions is 100%
@@ -216,7 +216,7 @@ function flevels_to_probability(intersections, ie_flevels, max_ie_flevels, input
 
     # Convert fill levels to fill status
     for i in 1:length(ie_flevels)
-	input_fstatus = Array{Int64, 1}(undef, length(intersections))
+	input_fstatus = Array{Float64, 1}(undef, length(intersections))
 	for j in 1:length(intersections)
 	    if ie_flevels[i][j] == max_ie_flevels[j]
 		input_fstatus[j] = 1
@@ -226,16 +226,15 @@ function flevels_to_probability(intersections, ie_flevels, max_ie_flevels, input
 	end
 	if i == 1
 	    unknown[1:(end - 1)] = input_fstatus
-	    unknown[end] = input_probabilities[i] * 100
+	    unknown[end] = input_probabilities[i]
 	else
 	    known_system[i, 1:(end - 1)] = input_fstatus
-	    known_system[i, end] = input_probabilities[i] * 100
+	    known_system[i, end] = input_probabilities[i]
 	end
     end
 
     # Solve the system of known linear equations
     known_rref, pivots = rref_with_pivots(known_system)
-    known_rref = Int.(known_rref)
 
     # Solve the system wrt the unknown linear equation
     p = 1
