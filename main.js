@@ -42,7 +42,7 @@ function lex_input(input_string) {
             tokens.push([token_types[i], null])
             break
           case rator_sym:
-            if (result == "and") {
+            if (result === "and") {
               tokens.push([rator_sym, and_sym])
             } else {
               tokens.push([rator_sym, or_sym])
@@ -67,4 +67,76 @@ function lex_input(input_string) {
     }
   }
   return tokens
+}
+
+// Convert a list of tokens to an AST
+
+// Grammar for AST:
+//   input_expr = expr_list
+//   expr_list = expr expr_tail
+//   expr_tail = empty | RATOR expr_list
+//   expr = EVENT | OPAREN expr_list CPAREN
+
+function is_next(type, tokens) {
+  if (tokens.length == 0) {
+    return false
+  } else {
+    return tokens[0][0] === type
+  }
+}
+
+function consume(type, tokens) {
+  if (tokens.length == 0) {
+    // Throw an error
+  } else if (tokens[0][0] !== type) {
+    // Throw an error
+  } else {
+    let value = tokens[0][1]
+    tokens.shift()
+    return value
+  }
+}
+
+function parse_input(tokens) {
+  let result = parse_expr_list(tokens)
+  return result
+}
+
+function parse_expr_list(tokens) {
+  let expr_result = parse_expr(tokens)
+  let expr_list_result = parse_expr_tail(expr_result, tokens)
+  return expr_list_result
+}
+
+function parse_expr_tail(expr_result, tokens) {
+  if (is_next(rator_sym, tokens)) {
+    let result = []
+    let rator_result = [rator_sym, consume(rator_sym, tokens)]
+    let expr_list_result = parse_expr_list(tokens)
+    result.push(expr_result, rator_result)
+    if (expr_list_result[0] === event_sym) {
+      result.push(expr_list_result)
+    } else {
+      result = result.concat(expr_list_result)
+    }
+    return result
+  } else if (is_next(equals_sym, tokens)) {
+    let result = []
+    let equals_result = [equals_sym, consume(equals_sym, tokens)]
+    result.push(expr_result, equals_result)
+    return result
+  } else {
+    return expr_result
+  }
+}
+
+function parse_expr(tokens) {
+  if (is_next(event_sym, tokens)) {
+    return [event_sym, consume(event_sym, tokens)]
+  } else if (is_next(oparen_sym, tokens)) {
+    consume(oparen_sym, tokens)
+    result = parse_expr_list(tokens)
+    consume(cparen_sym, tokens)
+    return result
+  }
 }
