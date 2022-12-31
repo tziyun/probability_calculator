@@ -1,4 +1,4 @@
-const { setPowerset, zeros, bitAnd, bitOr } = require('mathjs')
+const { setPowerset, bitAnd, bitOr, setIsSubset } = require('mathjs')
 
 var whitespace_sym = Symbol("whitespace")
 var oparen_sym = Symbol("oparen")
@@ -162,7 +162,7 @@ function get_se_psets(simple_events, intersections) {
 // Convert an input expression to the set of all events
 // which are its partitions
 function eval_expr(expr, intersections, se_psets, value) {
-  let ie_pset = new Array(intersections.length)
+  const ie_pset = new Array(intersections.length)
   for (let i = 0; i < intersections.length; i++) {
     ie_pset[i] = 0
   }
@@ -194,4 +194,43 @@ function eval_expr(expr, intersections, se_psets, value) {
     }
   }
   return ie_pset
+}
+
+// For each possible event in INTERSECTIONS, compute the number of
+// all possible partitions
+function get_max_flevels(simple_events, intersections) {
+  const max_flevels = []
+  for (let intersection of intersections) {
+    max_flevels.push(Math.pow(2, simple_events.length - intersection.length))
+  }
+  return max_flevels
+}
+
+// For each input expression, for each possible event in INTERSECTIONS,
+// compute that number of partitions that are present in the expression
+function get_ie_flevels(max_flevels, intersections, ie_pset) {
+  const ie_flevels = new Array(intersections.length)
+  set_array_range(ie_flevels, 0, intersections.length, 0)
+  for (let i = 0; i < ie_pset.length; i++) {
+    if (ie_pset[i] == true) {
+      let ie_partition = intersections[i]
+      for (let j = 0; j < intersections.length; j++) {
+        // Increment flevel for current partition
+        // Also increment flevel for each subset of current partition
+        if (setIsSubset(intersections[j], ie_partition)) {
+          if (ie_flevels[j] < max_flevels[j]) {
+            ie_flevels[j] += 1
+          }
+        }
+      }
+    }
+  }
+  return ie_flevels
+}
+
+// Set all elements within some range of an array
+function set_array_range(arr, start, end, value) {
+  for (let i = start; i < end; i++) {
+    arr[i] = value
+  }
 }
