@@ -53,7 +53,7 @@ function lex_input(input_string) {
             tokens.push([equals_sym, Number(result)])
             break
           case event_sym:
-            tokens.push([event_sym, Symbol(result)])
+            tokens.push([event_sym, result])
             break
         }
 
@@ -139,4 +139,22 @@ function parse_expr(tokens) {
     consume(cparen_sym, tokens)
     return result
   }
+}
+
+// For each simple event in EVENTS, compute the set of
+// all events which are its partitions
+function get_se_psets(simple_events, intersections) {
+  let se_psets = new Map()
+  for (let simple_event of simple_events) {
+    se_psets.set(simple_event, [])
+    for (let intersection of intersections) {
+      // Whether intersection is a partition of simple_event
+      if (intersection.includes(simple_event)) {
+        se_psets.get(simple_event).push(true)
+      } else {
+        se_psets.get(simple_event).push(false)
+      }
+    }
+  }
+  return se_psets
 }
