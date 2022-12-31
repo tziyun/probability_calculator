@@ -1,4 +1,4 @@
-const { setPowerset } = require('mathjs')
+const { setPowerset, zeros, bitAnd, bitOr } = require('mathjs')
 
 var whitespace_sym = Symbol("whitespace")
 var oparen_sym = Symbol("oparen")
@@ -150,11 +150,48 @@ function get_se_psets(simple_events, intersections) {
     for (let intersection of intersections) {
       // Whether intersection is a partition of simple_event
       if (intersection.includes(simple_event)) {
-        se_psets.get(simple_event).push(true)
+        se_psets.get(simple_event).push(1)
       } else {
-        se_psets.get(simple_event).push(false)
+        se_psets.get(simple_event).push(0)
       }
     }
   }
   return se_psets
+}
+
+// Convert an input expression to the set of all events
+// which are its partitions
+function eval_expr(expr, intersections, se_psets, value) {
+  let ie_pset = new Array(intersections.length)
+  for (let i = 0; i < intersections.length; i++) {
+    ie_pset[i] = 0
+  }
+  let rator = or_sym
+  let op
+  for (let subexpr of expr) {
+    switch (subexpr[0]) {
+      case rator_sym:
+        rator = subexpr[1]
+        break
+      case event_sym:
+        let input_event = subexpr[1]
+        op = (rator === or_sym) ? bitOr : bitAnd
+        for (let i = 0; i < ie_pset.length; i++) {
+          ie_pset[i] = op(ie_pset[i], se_psets.get(input_event)[i])
+        }
+        break
+      case equals_sym:
+        value = subexpr[1]
+        break
+      default:
+        // Recurse on subexpr
+        subexpr_result = eval_expr(subexpr, intersections, se_psets, value)
+        op = (rator === or_sym) ? bitOr : bitAnd
+        for (let i = 0; i < ie_pset.length; i++) {
+          ie_pset[i] = op(ie_pset[i], subexpr_result[i])
+        }
+        break
+    }
+  }
+  return ie_pset
 }
