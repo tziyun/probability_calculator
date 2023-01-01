@@ -283,7 +283,7 @@ function flevels_to_probability(intersections, ie_flevels, max_ie_flevels, input
 
   // Always true that the sum of the probabilities of all partitions is 100%
   set_array_range(known_system[0], 0, num_cols - 1, 1)
-  known_system[0][num_cols - 1] = 100
+  known_system[0][num_cols - 1] = 1
 
   // Convert fill levels to fill status
   for (let i = 0; i < ie_flevels.length; i++) {
@@ -304,7 +304,7 @@ function flevels_to_probability(intersections, ie_flevels, max_ie_flevels, input
       for (let k = 0; k < num_cols - 1; k++) {
         known_system[i][k] = input_fstatus[k]
       }
-      known_system[i][num_cols - 1] = input_probabilities[i] * 100
+      known_system[i][num_cols - 1] = input_probabilities[i]
     }
   }
 
