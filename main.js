@@ -1,5 +1,3 @@
-const { setPowerset, bitAnd, bitOr, setIsSubset } = require('mathjs')
-
 var whitespace_sym = Symbol("whitespace")
 var oparen_sym = Symbol("oparen")
 var cparen_sym = Symbol("cparen")
@@ -176,7 +174,7 @@ function eval_expr(expr, intersections, se_psets) {
         break
       case event_sym:
         let input_event = subexpr[1]
-        op = (rator === or_sym) ? bitOr : bitAnd
+        op = (rator === or_sym) ? math.bitOr : math.bitAnd
         for (let i = 0; i < ie_pset.length; i++) {
           ie_pset[i] = op(ie_pset[i], se_psets.get(input_event)[i])
         }
@@ -188,7 +186,7 @@ function eval_expr(expr, intersections, se_psets) {
         // Recurse on subexpr
         let subexpr_result
         [subexpr_result, value] = eval_expr(subexpr, intersections, se_psets)
-        op = (rator === or_sym) ? bitOr : bitAnd
+        op = (rator === or_sym) ? math.bitOr : math.bitAnd
         for (let i = 0; i < ie_pset.length; i++) {
           ie_pset[i] = op(ie_pset[i], subexpr_result[i])
         }
@@ -219,7 +217,7 @@ function get_ie_flevels(max_flevels, intersections, ie_pset) {
       for (let j = 0; j < intersections.length; j++) {
         // Increment flevel for current partition
         // Also increment flevel for each subset of current partition
-        if (setIsSubset(intersections[j], ie_partition)) {
+        if (math.setIsSubset(intersections[j], ie_partition)) {
           if (ie_flevels[j] < max_flevels[j]) {
             ie_flevels[j] += 1
           }
@@ -345,7 +343,7 @@ function find_probability(simple_events_string, input_strings) {
 
   // List of all possible intersections of events
   // Equivalently, of all partitions of the sample space
-  const intersections = setPowerset(simple_events)
+  const intersections = math.setPowerset(simple_events)
 
   // For each simple event, compute all partitions
   const se_psets = get_se_psets(simple_events, intersections)

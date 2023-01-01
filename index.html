@@ -4,11 +4,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/mathjs@11.5.0/lib/browser/math.js"></script>
+  <script src="main.js"></script>
   <title>Probability calculator</title>
 </head>
 
 <body>
+  <h1>Probability calculator</h1>
+  <form id="input_expressions">
+    <label>Simple events:</label>
+    <input id="simple_events" required>
+    <br>
+    <label>Unknown:</label>
+    <input id="unknown" required>
+    <br>
+    <label>Known:</label>
+    <input class="known" required>
+    <br>
+    <div id="buttons">
+      <button id="add_known" type="button">Add known</button>
+      <br>
+      <input type="submit" value="Submit">
+    </div>
+  </form>
 
+  <script>
+    let addButton = document.getElementById("add_known")
+    addButton.addEventListener("click", addKnown)
+
+    let form = document.forms["input_expressions"]
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      let input_exprs = form.elements
+      let simple_events_string
+      let input_strings = []
+      for (let expr of input_exprs) {
+        if (expr.id === "simple_events") {
+          simple_events_string = expr.value
+        } else if (expr.id === "unknown" || expr.className === "known") {
+          input_strings.push(expr.value)
+        }
+      }
+      alert(find_probability(simple_events_string, input_strings))
+    })
+
+    function addKnown() {
+      let form = document.getElementById("input_expressions")
+      let known = document.createElement("div")
+
+      let knownLabel = document.createElement("label")
+      knownLabel.innerHTML = "Known: "
+
+      let knownInput = document.createElement("input")
+      knownInput.setAttribute("class", "known")
+      knownInput.setAttribute("required", "")
+
+      let deleteButton = document.createElement("button")
+      deleteButton.setAttribute("type", "button")
+      deleteButton.innerHTML = "Remove known"
+      deleteButton.addEventListener("click", () => {
+        known.remove()
+      })
+
+      known.append(knownLabel, knownInput, deleteButton)
+      form.append(known)
+      form.append(document.getElementById("buttons"))
+    }
+  </script>
 </body>
 
 </html>
