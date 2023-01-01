@@ -72,7 +72,7 @@ function lex_input(input_string) {
 // Grammar for AST:
 //   input_expr = expr_list
 //   expr_list = expr expr_tail
-//   expr_tail = empty | RATOR expr_list
+//   expr_tail = empty | RATOR expr_list | EQUALS number
 //   expr = EVENT | OPAREN expr_list CPAREN
 
 function is_next(type, tokens) {
@@ -124,7 +124,7 @@ function parse_expr_tail(expr_result, tokens) {
     result.push(expr_result, equals_result)
     return result
   } else {
-    return expr_result
+    return [expr_result]
   }
 }
 
@@ -367,14 +367,3 @@ function find_probability(simple_events_string, input_strings) {
 
   return flevels_to_probability(intersections, ie_flevels, max_ie_flevels, ie_probabilities)
 }
-
-simple_events_string = "A, B, C, D"
-
-input_strings = [
-  "(A and C) or B and D",
-  "B and D = 0.6",
-  "A and C and D = 0.2",
-  "A and B and C and D = 0.1"
-]
-
-console.log(find_probability(simple_events_string, input_strings))
