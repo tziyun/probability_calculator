@@ -335,7 +335,9 @@ function flevels_to_probability(intersections, ie_flevels, max_ie_flevels, input
   return - unknown[num_cols - 1]
 }
 
-function find_probability(simple_events, input_strings) {
+function find_probability(simple_events_string, input_strings) {
+  const simple_events = simple_events_string.split(/[, ]+/)
+
   const input_exprs = []
   for (let input_string of input_strings) {
     input_exprs.push(parse_input(lex_input(input_string)))
@@ -368,7 +370,7 @@ function find_probability(simple_events, input_strings) {
   return flevels_to_probability(intersections, ie_flevels, max_ie_flevels, ie_probabilities)
 }
 
-simple_events = ['A', 'B', 'C', 'D']
+simple_events_string = "A, B, C, D"
 
 input_strings = [
   "(A and C) or B and D",
@@ -377,4 +379,4 @@ input_strings = [
   "A and B and C and D = 0.1"
 ]
 
-console.log(find_probability(simple_events, input_strings))
+console.log(find_probability(simple_events_string, input_strings))
