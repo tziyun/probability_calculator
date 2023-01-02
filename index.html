@@ -4,29 +4,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
   <script src="https://unpkg.com/mathjs@11.5.0/lib/browser/math.js"></script>
   <script src="main.js"></script>
   <title>Probability calculator</title>
 </head>
 
 <body>
-  <h1>Probability calculator</h1>
-  <form id="input_expressions">
-    <label>Simple events:</label>
-    <input id="simple_events" required>
+  <div class="container text-center">
     <br>
-    <label>Unknown:</label>
-    <input id="unknown" required>
+    <h1>Probability calculator</h1>
     <br>
-    <label>Known:</label>
-    <input class="known" required>
-    <br>
-    <div id="buttons">
-      <button id="add_known" type="button">Add known</button>
-      <br>
-      <input type="submit" value="Submit">
-    </div>
-  </form>
+    <form id="input_expressions">
+      <div class="input-group mb-3">
+        <span id="simple_events_label" class="input-group-text">Simple events:</span>
+        <input id="simple_events" class="form-control" type="text" aria-labelledby="simple_events_label" required>
+      </div>
+      <div class="input-group mb-3">
+        <span id="unknown_label" class="input-group-text">Unknown event:</span>
+        <input id="unknown" class="form-control" type="text" aria-labelledby="unknown_label" required>
+      </div>
+      <div class="input-group mb-3">
+        <span class="input-group-text">Known event:</span>
+        <input name="known" class="form-control" type="text" aria-label="known event" required>
+      </div>
+      <div id="buttons">
+        <button id="add_known" class="btn btn-outline-secondary" type="button">Add known event</button>
+        <input type="submit" class="btn btn-primary" value="Submit">
+      </div>
+    </form>
+  </div>
+  <div id="answer" class="container text-center">
+  </div>
 
   <script>
     let addButton = document.getElementById("add_known")
@@ -41,34 +51,43 @@
       for (let expr of input_exprs) {
         if (expr.id === "simple_events") {
           simple_events_string = expr.value
-        } else if (expr.id === "unknown" || expr.className === "known") {
+        } else if (expr.id === "unknown" || expr.name === "known") {
           input_strings.push(expr.value)
         }
       }
-      alert(find_probability(simple_events_string, input_strings))
+      probability = find_probability(simple_events_string, input_strings)
+      let answer = document.getElementById("answer")
+      answer.innerHTML = `<br><p>Probability of unknown event: ${probability}</p>`
+      form.after(answer)
     })
 
     function addKnown() {
       let form = document.getElementById("input_expressions")
       let known = document.createElement("div")
+      known.setAttribute("class", "input-group mb-3")
 
-      let knownLabel = document.createElement("label")
-      knownLabel.innerHTML = "Known: "
+      let knownLabel = document.createElement("span")
+      knownLabel.innerHTML = "Known event: "
+      knownLabel.setAttribute("class", "input-group-text")
 
       let knownInput = document.createElement("input")
-      knownInput.setAttribute("class", "known")
+      knownInput.setAttribute("name", "known")
+      knownInput.setAttribute("class", "form-control")
+      knownInput.setAttribute("type", "text")
+      knownInput.setAttribute("aria-label", "known event")
       knownInput.setAttribute("required", "")
 
       let deleteButton = document.createElement("button")
       deleteButton.setAttribute("type", "button")
-      deleteButton.innerHTML = "Remove known"
+      deleteButton.setAttribute("class", "btn btn-outline-secondary")
+      knownInput.setAttribute("aria-label", "remove known event")
+      deleteButton.innerHTML = "Remove"
       deleteButton.addEventListener("click", () => {
         known.remove()
       })
 
       known.append(knownLabel, knownInput, deleteButton)
-      form.append(known)
-      form.append(document.getElementById("buttons"))
+      form.append(known, document.getElementById("buttons"), document.getElementById("answer"))
     }
   </script>
 </body>
