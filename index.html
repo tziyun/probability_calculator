@@ -12,6 +12,7 @@
 </head>
 
 <body>
+  <script>0</script>
   <div class="container text-center">
     <br>
     <h1>Probability calculator</h1>
@@ -55,9 +56,15 @@
           input_strings.push(expr.value)
         }
       }
-      probability = find_probability(simple_events_string, input_strings)
+
       let answer = document.getElementById("answer")
-      answer.innerHTML = `<br><p>Probability of unknown event: ${probability}</p>`
+      try {
+        probability = find_probability(simple_events_string, input_strings)
+        answer.innerHTML = `<br><p>Probability of unknown event: ${probability}</p>`
+      } catch (e) {
+        let answer = document.getElementById("answer")
+        answer.innerHTML = `<br><p>${e.message}</p>`
+      }
       form.after(answer)
     })
 

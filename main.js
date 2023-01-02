@@ -8,7 +8,7 @@ var and_sym = Symbol("and")
 var or_sym = Symbol("or")
 
 // Convert the input string into a list of tokens
-function lex_input(input_string) {
+function lex_input(input_string, simple_events) {
   const tokens = []
 
   // token type for each regexp
@@ -47,10 +47,13 @@ function lex_input(input_string) {
             }
             break
           case equals_sym:
-            result = result_status[1]
-            tokens.push([equals_sym, Number(result)])
+            let probability = result_status[1]
+            tokens.push([equals_sym, Number(probability)])
             break
           case event_sym:
+            if (simple_events.includes(result) == false) {
+              throw new Error(`Unexpected event type: ${result}`)
+            }
             tokens.push([event_sym, result])
             break
         }
@@ -85,9 +88,9 @@ function is_next(type, tokens) {
 
 function consume(type, tokens) {
   if (tokens.length == 0) {
-    // Throw an error
+    throw new Error("Expected an additional token but none remaining")
   } else if (tokens[0][0] !== type) {
-    // Throw an error
+    throw new Error(`Expected token of type ${type} but received type ${tokens[0][0]}`)
   } else {
     let value = tokens[0][1]
     tokens.shift()
@@ -136,6 +139,8 @@ function parse_expr(tokens) {
     result = parse_expr_list(tokens)
     consume(cparen_sym, tokens)
     return result
+  } else {
+    throw new Error("Expected event or open parenthesis but found none")
   }
 }
 
@@ -311,15 +316,14 @@ function flevels_to_probability(intersections, ie_flevels, max_ie_flevels, input
 
   // Solve the system wrt the unknown linear equation
   let p = 0
-  for (let i = 0; i < num_cols; i++) {
+  for (let i = 0; i < num_cols - 1; i++) {
     if (unknown[i] != 0) {
       while (p < pivots.length && i != pivots[p]) {
         p++
       }
       if (p >= pivots.length) {
         // Inconsistent system of equations
-        // Throw an error
-        break
+        throw new Error('Insufficient or conflicting information')
       } else {
         let factor = unknown[i]
         for (let k = 0; k < num_cols; k++) {
@@ -338,7 +342,7 @@ function find_probability(simple_events_string, input_strings) {
 
   const input_exprs = []
   for (let input_string of input_strings) {
-    input_exprs.push(parse_input(lex_input(input_string)))
+    input_exprs.push(parse_input(lex_input(input_string, simple_events)))
   }
 
   // List of all possible intersections of events
