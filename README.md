@@ -7,13 +7,9 @@ Specifically, the calculator requires the following input:
 - One or more known events, compound events with known probability
 - One unknown event, a compound event with unknown probability
 
-The output is either the probability of the unknown event, or a notification that there is not enough information to find it.
+The output is either the probability of the unknown event, or an error message if the provided input is found to be inconsistent or if more information is required to solve the problem.
 
-## Example
-
-Suppose we have the simple events `A, B, C, D`. We want to find the probability of `(A and C) or B and D`, and we know that `B and D` has probability 0.6, `A and C and D` has probability 0.2, and `A and B and C and D` has probability 0.1. After providing this information to the calculator, we find that the probability of `(A and C) or B and D` is 0.7.
-
-![Example](example.png)
+Try the calculator [here](https://tziyun.github.io/probability_calculator/).
 
 ## How to use
 
@@ -24,6 +20,12 @@ Compound events: A compound event is defined in terms of simple events, with a f
 Unknown event: The unknown event is a compound event.
 
 Known event: The known event has the same syntax as a compound event, but requires an equals sign followed by a numerical probability.
+
+## Example
+
+Suppose we have the simple events `A, B, C, D`. We want to find the probability of `(A and C) or B and D`, and we know that `B and D` has probability 0.6, `A and C and D` has probability 0.2, and `A and B and C and D` has probability 0.1. After providing this information to the calculator, we find that the probability of `(A and C) or B and D` is 0.7.
+
+![Example](example.png)
 
 ## Underlying representation
 
@@ -49,6 +51,6 @@ The sample space of two simple events A, B, and C can be split into 8 partitions
 
 Essentially, each compound event is internally represented as a set of partitions. For example, given the simple events A, B, and C, a compound event of "A and B or C" is equivalent to the partitions (4), (5), (6), (7), and (8).
 
-Although this becomes difficult to visualize for higher-dimensional sample spaces, the underlying representation still holds. As an additional example, the following are diagrams of a sample-space of four simple events, and serve as a companion to this earlier example.
+Although this becomes difficult to visualize for higher-dimensional sample spaces, the underlying representation still holds. As an additional example, the following are diagrams of a sample-space of four simple events, and serve as a companion to [this earlier example](https://github.com/tziyun/probability_calculator#example).
 
 <img src="four_events.svg" alt="Venn diagram for four events" height="400"> <img src="four_events2.svg" alt="Larger Venn diagram for four events" height="400">
