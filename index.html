@@ -73,7 +73,7 @@
       // Display answer if successful
       // Otherwise, catch the error and display the error message
       try {
-        probability = find_probability(simple_events_string, input_strings)
+        probability = findProbability(simple_events_string, input_strings)
         answer.innerHTML = `<br><p>Probability of unknown event: ${probability}</p>`
       } catch (e) {
         let answer = document.getElementById("answer")
