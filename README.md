@@ -1,18 +1,18 @@
 
 # Table of Contents
 
-1.  [Introduction](#org56a802b)
-2.  [How to use](#org92d8ba3)
-    1.  [The input](#org2c3472d)
-    2.  [Example of usage](#org9bfdb72)
-3.  [Program logic](#org7092dbd)
-    1.  [The sample space](#org2f140e4)
-    2.  [Processing the input](#orge505105)
-    3.  [Example of input processing](#orgdbe4055)
+1.  [Introduction](#org0951eed)
+2.  [How to use](#org9bd6ac9)
+    1.  [The input](#org90ffbc0)
+    2.  [Example of usage](#org2029554)
+3.  [Program logic](#org6ff4aea)
+    1.  [The sample space](#orgd2174aa)
+    2.  [Processing the input](#orgf99914f)
+    3.  [Example of input processing](#orgc0c309a)
 
 
 
-<a id="org56a802b"></a>
+<a id="org0951eed"></a>
 
 # Introduction
 
@@ -29,12 +29,12 @@ The output is either the probability of the unknown event, or an error message (
 Try the calculator [here](https://tziyun.github.io/probability_calculator/).
 
 
-<a id="org92d8ba3"></a>
+<a id="org9bd6ac9"></a>
 
 # How to use
 
 
-<a id="org2c3472d"></a>
+<a id="org90ffbc0"></a>
 
 ## The input
 
@@ -47,7 +47,7 @@ Unknown event: Can either be simple or compound.
 Known event: Can either be simple or compound. After the event, type an equals sign, followed by the probability of the event.
 
 
-<a id="org9bfdb72"></a>
+<a id="org2029554"></a>
 
 ## Example of usage
 
@@ -56,12 +56,12 @@ Suppose we have the simple events `A, B, C, D`. We want to find the probability 
 <img src="./example.png" width="600px">
 
 
-<a id="org7092dbd"></a>
+<a id="org6ff4aea"></a>
 
 # Program logic
 
 
-<a id="org2f140e4"></a>
+<a id="orgd2174aa"></a>
 
 ## The sample space
 
@@ -89,11 +89,10 @@ The sample space of three simple events A, B, and C can be split into 8 partitio
 
 Although this becomes difficult to visualize for higher-dimensional sample spaces, the underlying representation still holds. As an additional example, the following are diagrams of a sample-space of four simple events.
 
-<img src="./four_events.svg" width="400px">
-<img src="./four_events2.svg" width="400px">
+<img src="./four_events.svg" width="400px"><img src="./four_events2.svg" width="400px">
 
 
-<a id="orge505105"></a>
+<a id="orgf99914f"></a>
 
 ## Processing the input
 
@@ -108,46 +107,39 @@ Although this becomes difficult to visualize for higher-dimensional sample space
     3.  Use process of elimination to calculate the probability of the **unknown event**.
 
 
-<a id="orgdbe4055"></a>
+<a id="orgc0c309a"></a>
 
 ## Example of input processing
 
-In this section, we will demonstrate the program logic by working through [this example](#org9bfdb72) from earlier:
+In this section, we will demonstrate the program logic by working through [this example](#org2029554) from earlier:
 
 > Suppose we have the simple events `A, B, C, D`. We want to find the probability of `(A and C) or B and D`, and we know that `B and D` has probability 0.6, `A and C and D` has probability 0.2, and `A and B and C and D` has probability 0.1.
 
-(Step 1.1) Since the simple events are `A, B, C, D`, the sample space is $ \{ A, B, C, D \} $. To represent all possible interactions among the simple events, we divide the sample space into 16 **partitions**, which we define as a set of regions that are mutually exclusive and jointly exhaustive. A visualization is as follows. For example: Partition 11 represents the case where only events `C` and `D` occur; Partition 13 represents the case where only events `A`, `B`, and `D` occur.
+(Step 1.1) Since the simple events are `A, B, C, D`, the sample space is $\{ A, B, C, D \}$. To represent all possible interactions among the simple events, we divide the sample space into 16 **partitions**, which we define as a set of regions that are mutually exclusive and jointly exhaustive. A visualization is as follows. For example: Partition 11 represents the case where only events `C` and `D` occur; Partition 13 represents the case where only events `A`, `B`, and `D` occur.
 
-<img src="./partition11.svg" width="500px">
-<img src="./partition13.svg" width="500px">
+<img src="./partition11.svg" width="500px"><img src="./partition13.svg" width="500px">
 
 (Step 1.2) The canonicalization of each simple event is as follows (in green).
 
-<img src="./eventA.svg" width="400px">
-<img src="./eventB.svg" width="400px">
+<img src="./eventA.svg" width="400px"><img src="./eventB.svg" width="400px">
 
-<img src="./eventC.svg" width="400px">
-<img src="./eventB.svg" width="400px">
+<img src="./eventC.svg" width="400px"><img src="./eventB.svg" width="400px">
 
 (Step 1.3 and 1.4) For example, the known event `B and D` is expressed as the shared area of events `B` and `D`. Therefore its canonicalization is as follows (in green).
 
 <img src="./eventsBD.svg" width="400px">
 
-(Step 2.1) Since the sample space is $ \{ A, B, C, D \} $, the powerset consists of $ \{ \} $, $ \{ A \} $, $ \{ B \} $, $ \{ C \} $, $ \{ D \} $, $ \{ A, B \} $, $ \{ A, C \} $, $ \{ A, D \} $, $ \{ B, C \} $, $ \{ B, D \} $, $ \{ C, D \} $, $ \{ A, B, C \} $, $ \{ A, B, D \} $, $ \{ A, C, D \} $, $ \{ B, C, D \} $, and $ \{ A, B, C, D \} $.
+(Step 2.1) Since the sample space is $\{ A, B, C, D \}$, the powerset consists of $\{ \}$, $\{ A \}$, $\{ B \}$, $\{ C \}$, $\{ D \}$, $\{ A, B \}$, $\{ A, C \}$, $\{ A, D \}$, $\{ B, C \}$, $\{ B, D \}$, $\{ C, D \}$, $\{ A, B, C \}$, $\{ A, B, D \}$, $\{ A, C, D \}$, $\{ B, C, D \}$, and $\{ A, B, C, D \}$.
 
-(Step 2.2) For example, the known event `B and D` fulfills the following members of the powerset: $ \{ \} $, $ \{ B, D \} $, $ \{ A, B, D \} $, $ \{ B, C, D \} $, and $ \{ A, B, C, D \} $.
+(Step 2.2) For example, the known event `B and D` fulfills the following members of the powerset: $\{ \}$, $\{ B, D \}$, $\{ A, B, D \}$, $\{ B, C, D \}$, and $\{ A, B, C, D \}$.
 
-<img src="./eventsBD.svg" width="400px">
-<img src="./eventsABD.svg" width="400px">
+<img src="./eventsBD.svg" width="400px"><img src="./eventsABD.svg" width="400px">
 
-<img src="./eventsBCD.svg" width="400px">
-<img src="./eventsABCD.svg" width="400px">
+<img src="./eventsBCD.svg" width="400px"><img src="./eventsABCD.svg" width="400px">
 
 (Step 2.3) The canonicalization of each known event is mapped to its probability. This information is used to compute the probability of the unknown event. We can see that the last area (the unknown) consists of the first area, plus the second, minus the third.
 
-<img src="./known1.svg" width="400px">
-<img src="./known2.svg" width="400px">
+<img src="./known1.svg" width="400px"><img src="./known2.svg" width="400px">
 
-<img src="./known3.svg" width="400px">
-<img src="./unknown.svg" width="400px">
+<img src="./known3.svg" width="400px"><img src="./unknown.svg" width="400px">
 
